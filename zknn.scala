@@ -10,15 +10,7 @@ object zknn{
 
 	def interleave(in:ListBuffer[String]): String = {
 		// get max length
-		var maxLen = 0
-		var res = ""
-		val L = in.length
-
-		for (i <- 0 until L){
-			if (in(i).length > maxLen){
-				maxLen = in(i).length
-			}
-		}
+		val maxLen = in.map(str => str.length).max
 
 		for (i <- 0 until maxLen){
 			for (j <- 0 until L){
@@ -37,7 +29,6 @@ object zknn{
 	}
 
  	def subTwo(tuple: (ListBuffer[ListBuffer[Double]], Double)) = tuple._2
-
 
  	def distance(a:Seq[Double], b:Seq[Double]): Double = {
  		math.sqrt(a.zipWithIndex.map{ x => 
