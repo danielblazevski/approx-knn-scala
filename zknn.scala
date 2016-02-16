@@ -50,19 +50,19 @@ object zknn{
 		var zTrainSet = SortedSet[(ListBuffer[ListBuffer[Double]], Double)]()(Ordering.by(subTwo)) ++ 
 		train.map(v=>(v,zValue(v)) )
 
-		val C = new ListBuffer[ListBuffer[Double]]
+		val candidatePointsFromZvalue = new ListBuffer[ListBuffer[Double]]
 		val rSeq = Seq.fill(alpha)(Array.fill(train.head.length)(r.nextFloat))
 
-		for (itest <- 0 until test.length){
+		for (v <- test){
 			for (i <- 0 until alpha){
 				/////////get z_test_shifted; get nearest zip
-				val zTestCur = zValue(test(itest)) /////////  NEED TO SHIFT!!
+				val zTestCur = zValue(v) /////////  NEED TO SHIFT!!
 
-				/////////get gamma points aobut query point q need to check if near end
+				/////////get gamma points about query point q need to check if near end
 
-				//C++ //////////// get corresponding points in real space 
+				//candidatePointsFromZvalue ++ //////////// get corresponding points in real space 
 			}
-			//basicknnQuery(itest, C, k)
+			basicknnQuery(v, candidatePointsFromZvalue, k)
 		}
 	}
 
