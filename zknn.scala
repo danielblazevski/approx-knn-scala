@@ -4,8 +4,8 @@ import scala.collection.SortedSet
 
 object zknn{
 
-	val alpha = 3
-	val gamma = 10
+	val alpha = 1
+	val gamma = 1
 	val r = scala.util.Random
 
 	def interleave(in:ListBuffer[String]): String = {
@@ -26,11 +26,13 @@ object zknn{
 		res
 	}
 
-	def zValue(in:ListBuffer[Double]): Int = {
-		Integer.parseInt(interleave(in.map(x=>x.toInt.toBinaryString)),2)
+	def zValue(in:ListBuffer[Double]): Int = { //made un-scalaesque to debug
+		val interl = interleave(in.map(x=>x.toInt.toBinaryString))
+		val res = Integer.parseInt(interl,2)
+		res
 	}
 
- 	def subTwo(tuple: (ListBuffer[ListBuffer[Double]], Double)) = tuple._2
+ 	def subTwo(tuple: (ListBuffer[Double], Double)) = tuple._2
 
  	def distance(a:ListBuffer[Double], b:ListBuffer[Double]): Double = {
  		math.sqrt(a.zipWithIndex.map{ x => 
@@ -38,8 +40,9 @@ object zknn{
  									}.sum)
  	}
 
-	def basicknnQuery(train:ListBuffer[ListBuffer[Double]], test:ListBuffer[ListBuffer[Double]], k: Int){
-		test.map{ v=> (v,
+	def basicknnQuery(train:ListBuffer[ListBuffer[Double]], test:ListBuffer[ListBuffer[Double]], k: Int):
+	ListBuffer[(ListBuffer[Double], Array[ListBuffer[Double]])] = {
+		test.map{ v => (v,
 			train.map{
       		x => (x, distance(v, x))
       		}.sortBy(_._2).take(k).map(_._1).toArray)
@@ -47,33 +50,64 @@ object zknn{
 	}
 
 /////////////// main zknn query
-	def zknnQuery(train:ListBuffer[ListBuffer[Double]], test:ListBuffer[ListBuffer[Double]], k: Int){
+	def zknnQuery(train:ListBuffer[ListBuffer[Double]], test:ListBuffer[ListBuffer[Double]], k: Int):
+	ListBuffer[(ListBuffer[Double], Array[ListBuffer[Double]])] = {
 
-		var zTrainSet = SortedSet[(ListBuffer[ListBuffer[Double]], Double)]()(Ordering.by(subTwo)) ++ 
-		train.map(v=>(v,zValue(v)) )
+		var candidatePointsFromZvalue = new ListBuffer[ListBuffer[Double]]
+		val rSeq = Seq.fill(alpha)(Seq.fill(train.head.length)(r.nextFloat))
 
-		val candidatePointsFromZvalue = new ListBuffer[ListBuffer[Double]]
-		val rSeq = Seq.fill(alpha)(Array.fill(train.head.length)(r.nextFloat))
-
-		for (v <- test){
+		var res = new ListBuffer[(ListBuffer[Double], Array[ListBuffer[Double]])]
+		val v = test.head
+		//for (v <- test){
+			println("v =  " + v)
 			for (i <- 0 until alpha){
-				/////////get z_test_shifted; get nearest zip
-				val zTestCur = zValue(v) /////////  NEED TO SHIFT!!
+				val zQueryShifted = zValue(v.zipWithIndex.map{vZip => vZip._1 - rSeq(i)(vZip._2)})
+				println ("zQueryShifted =   " + zQueryShifted) 
+				val zTrainSetShiftedSortedPre = train.map{ trainPoint => 
+						trainPoint.zipWithIndex.map(trainPointZipped => trainPointZipped._1 - rSeq(i)(trainPointZipped._2))
+						}
+				
+				zTrainSetShiftedSortedPre.foreach(println)
 
-				/////////get gamma points about query point q need to check if near end
+				val zTrainSetShiftedSorted = zTrainSetShiftedSortedPre.map{
+							shiftTrainPoint => 
+							(shiftTrainPoint, zValue(shiftTrainPoint)) 
+							}//.sortBy(x => x._2)
 
-				//candidatePointsFromZvalue ++ //////////// get corresponding points in real space 
+				// get 2*gamma points about query point q, need to check if near end...wip
+				val zTrainSetShiftedByZTrain = zTrainSetShiftedSorted.map
+											{ tuple => 
+											(tuple._1 , tuple._2 - zQueryShifted)
+											}
+
+				val posFilter = zTrainSetShiftedByZTrain.filter(x => x._2 > 0)
+				val negFilter = zTrainSetShiftedByZTrain.filter(x => x._2 < 0)
+
+
+				if (posFilter.length >= gamma && negFilter.length >= gamma){
+					println("hello!")
+					println("posFilter.take(gamma).map(x => x._1)   =  " + posFilter.take(gamma).map(x => x._1))
+					println("negFilter.take(gamma).map(x => x._1)   =  " + negFilter.take(gamma).map(x => x._1))
+					candidatePointsFromZvalue = candidatePointsFromZvalue ++ posFilter.take(gamma).map(x => x._1)
+					candidatePointsFromZvalue = candidatePointsFromZvalue ++ negFilter.take(gamma).map(x => x._1)
+
+				}
+				res = res ++ basicknnQuery(candidatePointsFromZvalue, ListBuffer(v), k)
 			}
-			basicknnQuery(ListBuffer(v), candidatePointsFromZvalue, k)
-		}
+			println("res   =  " + res)
+			return res 
 	}
 
 	def main(args: Array[String]){
-
 		val lb = ListBuffer(12.2, 34.3, 2.0)
 		val Zval = zValue(lb)
-		println(Zval)
+		println("zVal =  " + Zval)
+
+		val train = ListBuffer(ListBuffer(1.2, 4.3), ListBuffer(2.0, 0.0), ListBuffer(2.0, 1.0))
+		val test = ListBuffer(ListBuffer(0.8, 3.5))
+
+		val knn = zknnQuery(train, test, 1)
+		println("nearest neighbor =  " + knn.head._2.head)
 
 	}
-
 }
