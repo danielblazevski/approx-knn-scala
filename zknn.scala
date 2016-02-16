@@ -11,6 +11,7 @@ object zknn{
 	def interleave(in:ListBuffer[String]): String = {
 		// get max length
 		val maxLen = in.map(str => str.length).max
+		val L = in.length
 
 		for (i <- 0 until maxLen){
 			for (j <- 0 until L){
