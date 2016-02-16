@@ -59,16 +59,12 @@ object zknn{
 		var res = new ListBuffer[(ListBuffer[Double], Array[ListBuffer[Double]])]
 		val v = test.head
 		//for (v <- test){
-			println("v =  " + v)
 			for (i <- 0 until alpha){
 				val zQueryShifted = zValue(v.zipWithIndex.map{vZip => vZip._1 - rSeq(i)(vZip._2)})
-				println ("zQueryShifted =   " + zQueryShifted) 
 				val zTrainSetShiftedSortedPre = train.map{ trainPoint => 
 						trainPoint.zipWithIndex.map(trainPointZipped => trainPointZipped._1 - rSeq(i)(trainPointZipped._2))
 						}
 				
-				zTrainSetShiftedSortedPre.foreach(println)
-
 				val zTrainSetShiftedSorted = zTrainSetShiftedSortedPre.map{
 							shiftTrainPoint => 
 							(shiftTrainPoint, zValue(shiftTrainPoint)) 
@@ -85,7 +81,6 @@ object zknn{
 
 
 				if (posFilter.length >= gamma && negFilter.length >= gamma){
-					println("hello!")
 					println("posFilter.take(gamma).map(x => x._1)   =  " + posFilter.take(gamma).map(x => x._1))
 					println("negFilter.take(gamma).map(x => x._1)   =  " + negFilter.take(gamma).map(x => x._1))
 					candidatePointsFromZvalue = candidatePointsFromZvalue ++ posFilter.take(gamma).map(x => x._1)
@@ -94,7 +89,6 @@ object zknn{
 				}
 				res = res ++ basicknnQuery(candidatePointsFromZvalue, ListBuffer(v), k)
 			}
-			println("res   =  " + res)
 			return res 
 	}
 
