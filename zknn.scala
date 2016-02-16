@@ -12,6 +12,7 @@ object zknn{
 		// get max length
 		val maxLen = in.map(str => str.length).max
 		val L = in.length
+		var res = ""
 
 		for (i <- 0 until maxLen){
 			for (j <- 0 until L){
@@ -31,7 +32,7 @@ object zknn{
 
  	def subTwo(tuple: (ListBuffer[ListBuffer[Double]], Double)) = tuple._2
 
- 	def distance(a:Seq[Double], b:Seq[Double]): Double = {
+ 	def distance(a:ListBuffer[Double], b:ListBuffer[Double]): Double = {
  		math.sqrt(a.zipWithIndex.map{ x => 
  									(x._1 - b(x._2))*(x._1 - b(x._2))
  									}.sum)
@@ -63,7 +64,7 @@ object zknn{
 
 				//candidatePointsFromZvalue ++ //////////// get corresponding points in real space 
 			}
-			basicknnQuery(v, candidatePointsFromZvalue, k)
+			basicknnQuery(ListBuffer(v), candidatePointsFromZvalue, k)
 		}
 	}
 
