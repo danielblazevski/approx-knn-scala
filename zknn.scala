@@ -40,11 +40,9 @@ object zknn{
 
 
  	def distance(a:Seq[Double], b:Seq[Double]): Double = {
- 		var res = 0.0
- 		for (i <-0 until a.length){
- 			res += (a(i) - b(i))*(a(i) - b(i)) 
- 		}
- 		math.sqrt(res)
+ 		math.sqrt(a.zipWithIndex.map{ x => 
+ 									(x._1 - b(x._2))*(x._1 - b(x._2))
+ 									}.sum)
  	}
 
 	def basicknnQuery(train:ListBuffer[ListBuffer[Double]], test:ListBuffer[ListBuffer[Double]], k: Int){
