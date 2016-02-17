@@ -86,7 +86,7 @@ object zknn {
       }
       res = res ++ basicknnQuery(candidatePointsFromZvalue, ListBuffer(v), k)
     }
-    return res
+     res
   }
 
   def main(args: Array[String]) {
