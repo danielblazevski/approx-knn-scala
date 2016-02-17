@@ -85,14 +85,22 @@ object zknn {
         val posFilter = zTrainSetShiftedByZTrain.filter(x => x._2 > 0)
         val negFilter = zTrainSetShiftedByZTrain.filter(x => x._2 < 0)
 
-        if (posFilter.length >= gamma && negFilter.length >= gamma) {
+        if (posFilter.length >= gamma && negFilter.length >= gamma) { // to-do:  more scala-esque
           println("posFilter.take(gamma).map(x => x._1)   =  " + posFilter.take(gamma).map(x => x._1))
           println("negFilter.take(gamma).map(x => x._1)   =  " + negFilter.take(gamma).map(x => x._1))
           candidatePointsFromZvalue = candidatePointsFromZvalue ++ posFilter.take(gamma).map(x => x._1)
           candidatePointsFromZvalue = candidatePointsFromZvalue ++ negFilter.take(gamma).map(x => x._1)
-
+        } else if (posFilter.length < gamma && posFilter.length + negFilter.length >= 2*gamma) {
+          candidatePointsFromZvalue = candidatePointsFromZvalue ++ posFilter.take(posFilter.length).map(x => x._1)
+          candidatePointsFromZvalue = candidatePointsFromZvalue ++ negFilter.take(2*gamma - posFilter.length).map(x => x._1)
+        } else if (negFilter.length < gamma && posFilter.length + negFilter.length >= 2*gamma) {
+          candidatePointsFromZvalue = candidatePointsFromZvalue ++ negFilter.take(negFilter.length).map(x => x._1)
+          candidatePointsFromZvalue = candidatePointsFromZvalue ++ posFilter.take(2*gamma - negFilter.length).map(x => x._1)
+      } else {
+          throw new IllegalArgumentException(s" Error: gamma is too large!")
         }
-        res += basicknnQuerySingleTest(candidatePointsFromZvalue, v, k)
+
+      res += basicknnQuerySingleTest(candidatePointsFromZvalue, v, k)
       }
     }
      res
@@ -104,8 +112,8 @@ object zknn {
     val Zval = zValue(lb)
     println("zVal =  " + Zval)
 
-    val train = Seq(ListBuffer(1.2, 4.3), ListBuffer(2.0, 0.0), ListBuffer(2.0, 1.0))
-    val test = Seq(ListBuffer(0.8, 3.5), ListBuffer(1.9, 0.2))
+    val train = Seq(ListBuffer(1.2, 4.3), ListBuffer(2.0, 0.0), ListBuffer(2.0, 3.5))
+    val test = Seq(ListBuffer(0.8, 3.5), ListBuffer(1.6, 0.2))
 
     val knn = zknnQuery(train, test, 1)
     println("nearest neighborr =  " + knn)
