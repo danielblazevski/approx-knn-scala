@@ -1,10 +1,11 @@
 // z-knn
+
+package zknn
+
 import scala.collection.mutable.ListBuffer
 
-object zknn {
+class zknn(alpha: Int, gamma: Int) {
 
-  val alpha = 1
-  val gamma = 1
   val r = scala.util.Random
 
   type Point = ListBuffer[Double]
@@ -60,22 +61,29 @@ object zknn {
   def zknnQuery(train: Seq[Point], test: Seq[Point], k: Int):
   ListBuffer[(Point, Array[Point])] = {
 
+    // shift points to make sure all entries are positive (what about random shifts?)
+
     var candidatePointsFromZvalue = new ListBuffer[Point]
-    val rSeq = Seq.fill(alpha)(Seq.fill(train.head.length)(r.nextFloat))
+    val rSeq = Seq.fill(alpha)(Seq.fill(train.head.length)(r.nextDouble))
 
     var res = new ListBuffer[(Point, Array[Point])]
+
+      val zTrainSetShiftedSortedFull = rSeq.map{ rVec =>
+        train.map{trainPoint => (trainPoint,
+        trainPoint.zipWithIndex.map(trainPointZipped =>
+          trainPointZipped._1 - rVec(trainPointZipped._2)))
+      }.map {
+        shiftTrainPoint =>
+          (shiftTrainPoint._1, zValue(shiftTrainPoint._2))
+      }.sortBy(x => x._2)
+        }
+
     for (v <- test) {
       for (i <- 0 until alpha) {
         val zQueryShifted = zValue(v.zipWithIndex.map { vZip => vZip._1 - rSeq(i)(vZip._2) })
 
-        val zTrainSetShiftedSorted = train.map { trainPoint => (trainPoint,
-          trainPoint.zipWithIndex.map(trainPointZipped =>
-            trainPointZipped._1 - rSeq(i)(trainPointZipped._2)))
-        }.map {
-          shiftTrainPoint =>
-            (shiftTrainPoint._1, zValue(shiftTrainPoint._2))
-        }.sortBy(x => x._2)
-
+        val zTrainSetShiftedSorted = zTrainSetShiftedSortedFull(i)
+  
         // get 2*gamma points about query point q, gamma points above and below based on z value
         // if there aren't gamma points above, still grab 2*gamma points
         val zTrainSetShiftedByZTrain = zTrainSetShiftedSorted.map { tuple =>
@@ -110,17 +118,4 @@ object zknn {
      res
   }
 
-  def main(args: Array[String]) {
-
-    val lb = ListBuffer(12.2, 34.3, 2.0)
-    val Zval = zValue(lb)
-    println("zVal =  " + Zval)
-
-    val train = Seq(ListBuffer(1.2, 4.3), ListBuffer(2.0, 0.0), ListBuffer(2.0, 7.5))
-    val test = Seq(ListBuffer(0.8, 3.5), ListBuffer(1.6, 0.2))
-
-    val knn = zknnQuery(train, test, 1)
-    println("nearest neighbor =  " + knn.head._2.head)
-
-  }
 }
