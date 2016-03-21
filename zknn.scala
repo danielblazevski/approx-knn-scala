@@ -72,12 +72,13 @@ class zknn(alpha: Int, gamma: Int) {
         train.map{trainPoint => (trainPoint,
         trainPoint.zipWithIndex.map(trainPointZipped =>
           trainPointZipped._1 - rVec(trainPointZipped._2)))
-      }.map {
+        }.map {
         shiftTrainPoint =>
           (shiftTrainPoint._1, zValue(shiftTrainPoint._2))
-      }.sortBy(x => x._2)
-        }
+        }.sortBy(x => x._2)
+      }
 
+      var count = 0
     for (v <- test) {
       for (i <- 0 until alpha) {
         val zQueryShifted = zValue(v.zipWithIndex.map { vZip => vZip._1 - rSeq(i)(vZip._2) })
@@ -114,6 +115,7 @@ class zknn(alpha: Int, gamma: Int) {
 
       res += basicknnQuerySingleTest(candidatePointsFromZvalue, v, k)
       }
+      candidatePointsFromZvalue.clear
     }
      res
   }
