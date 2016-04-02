@@ -91,16 +91,7 @@ class zknn(alpha: Int, gamma: Int) {
 
         val posFilter = zTrainSetShiftedByZTrain.filter(x => x._2 > 0)
         val negFilter = zTrainSetShiftedByZTrain.filter(x => x._2 < 0)
-
-        /*
-        val posBool  = posFilter.length >= gamma 
-        val negBool  = negFilter.length >= gamma 
-
-        val posFilter = posBool match{case true => posFilter.take(gamma).map(x => x._1)
-
-        }
-      */
-
+        
         if (posFilter.length >= gamma && negFilter.length >= gamma) {
           candidatePointsFromZvalue ++=  posFilter.take(gamma).map(x => x._1) ++ 
                                          negFilter.take(gamma).map(x => x._1)
