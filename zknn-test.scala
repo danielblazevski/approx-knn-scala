@@ -15,11 +15,11 @@ object zknnTest{
     // to-do allow for negative entries, even when shifted in zknn query
     val r = scala.util.Random
 
-    val training = Seq.fill(numPoints)(ListBuffer(r.nextDouble + 1.0, r.nextDouble + 1.0,
+    val training = ListBuffer.fill(numPoints)(ListBuffer(r.nextDouble + 1.0, r.nextDouble + 1.0,
       r.nextDouble + 1.0, r.nextDouble + 1.0,
       r.nextDouble + 1.0, r.nextDouble + 1.0))
 
-    val testing = Seq.fill(numPoints)(ListBuffer(r.nextDouble + 1.0, r.nextDouble + 1.0,
+    val testing = ListBuffer.fill(numPoints)(ListBuffer(r.nextDouble + 1.0, r.nextDouble + 1.0,
       r.nextDouble + 1.0, r.nextDouble + 1.0,
       r.nextDouble + 1.0, r.nextDouble + 1.0))
       
@@ -57,8 +57,8 @@ object zknnTest{
     val Zval = ZknnClass.zValue(lb)
     println("zVal =  " + Zval)
 
-    val train = Seq(ListBuffer(1.2, 4.3), ListBuffer(25.0, 3.0), ListBuffer(29.0, 7.5))
-    val test = Seq(ListBuffer(0.8, 3.5), ListBuffer(1.6, 0.2))
+    val train = ListBuffer(ListBuffer(1.2, 4.3), ListBuffer(25.0, 3.0), ListBuffer(29.0, 7.5))
+    val test = ListBuffer(ListBuffer(0.8, 3.5), ListBuffer(1.6, 0.2))
 
     val knn = ZknnClass.zknnQuery(train, test, 1)
     println("nearest neighbor =  " + knn.head._2.head)

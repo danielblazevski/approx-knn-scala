@@ -56,7 +56,7 @@ class zknn(alpha: Int, gamma: Int) {
     }
 
   // main zknn query
-  def zknnQuery(train: Seq[Point], test: Seq[Point], k: Int):
+  def zknnQuery(train: ListBuffer[Point], test: ListBuffer[Point], k: Int):
   ListBuffer[(Point, Array[Point])] = {
 
     // shift points to make sure all entries are positive (what about random shifts?)
