@@ -4,27 +4,46 @@ import zknn.zknn
 
 object zknnTest{
 
-	def benchmark(numPoints: Int){
-		/// generate random set of points in [1,2]^6
-		// to-do allow for negative entries, even when shifted in zknn query
- 		val r = scala.util.Random
+    def distance(a: ListBuffer[Double], b: ListBuffer[Double]): Double = {
+      math.sqrt(a.zipWithIndex.map { x =>
+        (x._1 - b(x._2)) * (x._1 - b(x._2))
+      }.sum)
+    }
 
-		val training = Seq.fill(numPoints)(ListBuffer(r.nextDouble + 1.0, r.nextDouble + 1.0,
-			r.nextDouble + 1.0, r.nextDouble + 1.0,
-			r.nextDouble + 1.0, r.nextDouble + 1.0))
+  def benchmark_zknn(numPoints: Int){
+    /// generate random set of points in [1,2]^6
+    // to-do allow for negative entries, even when shifted in zknn query
+    val r = scala.util.Random
 
-		val testing = Seq.fill(numPoints)(ListBuffer(r.nextDouble + 1.0, r.nextDouble + 1.0,
-			r.nextDouble + 1.0, r.nextDouble + 1.0,
-			r.nextDouble + 1.0, r.nextDouble + 1.0))
-	    
-	    val alpha = 1
-    	val gamma = 5
+    val training = Seq.fill(numPoints)(ListBuffer(r.nextDouble + 1.0, r.nextDouble + 1.0,
+      r.nextDouble + 1.0, r.nextDouble + 1.0,
+      r.nextDouble + 1.0, r.nextDouble + 1.0))
 
-		val ZknnClass = new zknn(alpha, gamma)
-		val knn = ZknnClass.zknnQuery(training, testing, 1)
-    	println("nearest neighbor BENCHMARK =  " + knn.head._2.head)
+    val testing = Seq.fill(numPoints)(ListBuffer(r.nextDouble + 1.0, r.nextDouble + 1.0,
+      r.nextDouble + 1.0, r.nextDouble + 1.0,
+      r.nextDouble + 1.0, r.nextDouble + 1.0))
+      
+      val alpha = 1
+      val gamma = 5
 
-	}
+      val t0 = System.nanoTime()
+    val ZknnClass = new zknn(alpha, gamma)
+    val zknn = ZknnClass.zknnQuery(training, testing, 1)
+      val tf = System.nanoTime()
+    println("Elapsed time for zknn =       : " + (tf - t0)/1000000000 + "s")
+
+      //println("nearest neighbor BENCHMARK =  " + zknn.head._2.head)
+
+      val t0_brute = System.nanoTime()
+      testing.map { v => (v,
+        training.map {
+          x => (x, distance(v, x))
+        }.sortBy(_._2).take(1).map(_._1).toArray)
+    }
+      val tf_brute = System.nanoTime()
+    println("Elapsed time for brute force knn =       : " + (tf_brute - t0_brute)/1000000000 + "s")
+
+  }
 
   def main(args: Array[String]) {
 
@@ -43,10 +62,8 @@ object zknnTest{
     val knn = ZknnClass.zknnQuery(train, test, 1)
     println("nearest neighbor =  " + knn.head._2.head)
 
-     val t0 = System.nanoTime()
-     benchmark(10000)
-     val tf = System.nanoTime()
- 	 println("Elapsed time for benchmark =       : " + (tf - t0)/1000000000 + "s")
+    val numPoints = 10000
+     benchmark_zknn(numPoints)
 
   }
 }
