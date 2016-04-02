@@ -93,20 +93,14 @@ class zknn(alpha: Int, gamma: Int) {
         val negFilter = zTrainSetShiftedByZTrain.filter(x => x._2 < 0)
 
         if (posFilter.length >= gamma && negFilter.length >= gamma) {
-          //println("posFilter.take(gamma).map(x => x._1)   =  " + posFilter.take(gamma).map(x => x._1))
-          //println("negFilter.take(gamma).map(x => x._1)   =  " + negFilter.take(gamma).map(x => x._1))
-          candidatePointsFromZvalue = candidatePointsFromZvalue ++ posFilter.take(gamma).map(x => x._1)
-          candidatePointsFromZvalue = candidatePointsFromZvalue ++ negFilter.take(gamma).map(x => x._1)
+          candidatePointsFromZvalue ++=  posFilter.take(gamma).map(x => x._1)
+          candidatePointsFromZvalue ++=  negFilter.take(gamma).map(x => x._1)
         } else if (posFilter.length < gamma && posFilter.length + negFilter.length >= 2*gamma) {
-          candidatePointsFromZvalue = candidatePointsFromZvalue ++
-            posFilter.take(posFilter.length).map(x => x._1)
-          candidatePointsFromZvalue = candidatePointsFromZvalue ++
-            negFilter.take(2*gamma - posFilter.length).map(x => x._1)
+          candidatePointsFromZvalue ++= posFilter.take(posFilter.length).map(x => x._1)
+          candidatePointsFromZvalue ++= negFilter.take(2*gamma - posFilter.length).map(x => x._1)
         } else if (negFilter.length < gamma && posFilter.length + negFilter.length >= 2*gamma) {
-          candidatePointsFromZvalue = candidatePointsFromZvalue ++
-            negFilter.take(negFilter.length).map(x => x._1)
-          candidatePointsFromZvalue = candidatePointsFromZvalue ++
-            posFilter.take(2*gamma - negFilter.length).map(x => x._1)
+          candidatePointsFromZvalue ++= negFilter.take(negFilter.length).map(x => x._1)
+          candidatePointsFromZvalue ++= posFilter.take(2*gamma - negFilter.length).map(x => x._1)
       } else {
           throw new IllegalArgumentException(s" Error: gamma is too large!")
         }
