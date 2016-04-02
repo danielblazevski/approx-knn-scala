@@ -41,7 +41,7 @@ class zknn(alpha: Int, gamma: Int) {
   }
 
   def basicknnQuery(train: ListBuffer[Point], test: ListBuffer[Point], k: Int):
-  ListBuffer[(ListBuffer[Double], Array[ListBuffer[Double]])] = {
+  Seq[(Point, Array[Point])] = {
     test.map { v => (v,
       train.map {
         x => (x, distance(v, x))
