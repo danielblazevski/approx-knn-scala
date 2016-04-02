@@ -32,8 +32,6 @@ class zknn(alpha: Int, gamma: Int) {
     Integer.parseInt(interleave(in.map(x => x.toInt.toBinaryString)), 2)
   }
 
-  def subTwo(tuple: (ListBuffer[Double], Double)) = tuple._2
-
   def distance(a: Point, b: Point): Double = {
     math.sqrt(a.zipWithIndex.map { x =>
       (x._1 - b(x._2)) * (x._1 - b(x._2))
