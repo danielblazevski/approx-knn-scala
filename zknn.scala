@@ -88,10 +88,7 @@ class zknn(alpha: Int, gamma: Int) {
         val zTrainSetShiftedByZTrain = zTrainSetShiftedSorted.map { tuple =>
           (tuple._1, tuple._2 - zQueryShifted)
         }
-
-        val posFilter = zTrainSetShiftedByZTrain.filter(x => x._2 > 0)
-        val negFilter = zTrainSetShiftedByZTrain.filter(x => x._2 < 0)
-        
+               
         val posFilter = zTrainSetShiftedByZTrain.filter(x => x._2 > 0).map(x => x._1)
         val negFilter = zTrainSetShiftedByZTrain.filter(x => x._2 < 0).map(x => x._1)
         
