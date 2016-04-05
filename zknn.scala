@@ -3,6 +3,7 @@
 package zknn
 
 import scala.collection.mutable.ListBuffer
+import scala.collection.mutable.PriorityQueue
 
 class zknn(alpha: Int, gamma: Int) {
 
@@ -39,12 +40,27 @@ class zknn(alpha: Int, gamma: Int) {
   }
 
   def basicknnQuery(train: ListBuffer[Point], test: ListBuffer[Point], k: Int):
-  Seq[(Point, Array[Point])] = {
-    test.map { v => (v,
-      train.map {
-        x => (x, distance(v, x))
-      }.sortBy(_._2).take(k).map(_._1).toArray)
+  ListBuffer[(Point, Array[Point])] = {
+
+    val queue = new PriorityQueue[ (Point, Double) ]()(Ordering.by(x => x._2))
+    val out = new ListBuffer[ (Point, Array[Point]) ]
+
+    for (testPoint <- test) {      
+      val outSingle = new Array[Point](k)
+      for (trainPoint <- train) {
+        // (training vector, input vector, input key, distance)
+        queue.enqueue((trainPoint, distance(testPoint, trainPoint)))
+        if (queue.size > k) {
+          queue.dequeue()
+        }
+      }
+      for (i <- 0 until k) {
+        outSingle(i) = queue.dequeue()._1
+      }
+      out += ((testPoint, outSingle))
     }
+    
+  return out 
   }
 
   def basicknnQuerySingleTest(train: ListBuffer[Point], test: Point, k: Int):
