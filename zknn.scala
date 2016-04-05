@@ -73,7 +73,6 @@ class zknn(alpha: Int, gamma: Int) {
 
     // shift points to make sure all entries are positive (what about random shifts?)
 
-    var candidatePointsFromZvalue = new ListBuffer[Point]
     val rSeq = Seq.fill(alpha)(Seq.fill(train.head.length)(r.nextDouble))
 
     var res = new ListBuffer[(Point, Array[Point])]
@@ -88,21 +87,16 @@ class zknn(alpha: Int, gamma: Int) {
         }.sortBy(x => x._2)
       }
 
-      var count = 0
     for (v <- test) {
+      var candidatePointsFromZvalue = new ListBuffer[Point]
       for (i <- 0 until alpha) {
         val zQueryShifted = zValue(v.zipWithIndex.map { vZip => vZip._1 - rSeq(i)(vZip._2) })
-
-        val zTrainSetShiftedSorted = zTrainSetShiftedSortedFull(i)
   
         // get 2*gamma points about query point q, gamma points above and below based on z value
         // if there aren't gamma points above, still grab 2*gamma points
-        val zTrainSetShiftedByZTrain = zTrainSetShiftedSorted.map { tuple =>
-          (tuple._1, tuple._2 - zQueryShifted)
-        }
                
-        val posFilter = zTrainSetShiftedByZTrain.filter(x => x._2 > 0).map(x => x._1)
-        val negFilter = zTrainSetShiftedByZTrain.filter(x => x._2 < 0).map(x => x._1)
+        val posFilter = zTrainSetShiftedSortedFull(i).filter(x => x._2 - zQueryShifted >= 0).map(x => x._1)
+        val negFilter = zTrainSetShiftedSortedFull(i).filter(x => x._2 - zQueryShifted < 0).map(x => x._1)
         
         val posLen = posFilter.length
         val negLen = negFilter.length
@@ -116,10 +110,8 @@ class zknn(alpha: Int, gamma: Int) {
         } else {
           throw new IllegalArgumentException(s" Error: gamma is too large!")
         }
-
-      res += basicknnQuerySingleTest(candidatePointsFromZvalue, v, k)
       }
-      candidatePointsFromZvalue.clear
+      res += basicknnQuerySingleTest(candidatePointsFromZvalue, v, k)
     }
      res
   }

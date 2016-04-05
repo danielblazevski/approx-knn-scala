@@ -23,7 +23,7 @@ object zknnTest{
       r.nextDouble + 1.0, r.nextDouble + 1.0,
       r.nextDouble + 1.0, r.nextDouble + 1.0))
       
-    val alpha = 1
+    val alpha = 2
     val gamma = 5
 
     val t0 = System.nanoTime()
@@ -55,7 +55,7 @@ object zknnTest{
 
     val ZknnClass = new zknn(alpha, gamma)
 
-    val lb = ListBuffer(12.2, 34.3, 2.0)
+    val lb = ListBuffer(2.0, 6.0)
     val Zval = ZknnClass.zValue(lb)
     println("zVal =  " + Zval)
 
@@ -65,7 +65,7 @@ object zknnTest{
     val knn = ZknnClass.zknnQuery(train, test, 1)
     println("nearest neighbor =  " + knn.head._2.head)
 
-    val numPoints = 3000
+    val numPoints = 12000
      benchmark_zknn(numPoints)
 
   }
