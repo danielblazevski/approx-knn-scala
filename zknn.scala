@@ -72,7 +72,6 @@ class zknn(alpha: Int, gamma: Int) {
   ListBuffer[(Point, Array[Point])] = {
 
     // shift points to make sure all entries are positive (what about random shifts?)
-
     val rSeq = Seq.fill(alpha)(Seq.fill(train.head.length)(r.nextDouble))
 
     var res = new ListBuffer[(Point, Array[Point])]
@@ -94,7 +93,6 @@ class zknn(alpha: Int, gamma: Int) {
   
         // get 2*gamma points about query point q, gamma points above and below based on z value
         // if there aren't gamma points above, still grab 2*gamma points
-               
         val posFilter = zTrainSetShiftedSortedFull(i).filter(x => x._2 - zQueryShifted >= 0).map(x => x._1)
         val negFilter = zTrainSetShiftedSortedFull(i).filter(x => x._2 - zQueryShifted < 0).map(x => x._1)
         
