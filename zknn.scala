@@ -58,18 +58,14 @@ class zknn(alpha: Int, gamma: Int) {
         outSingle(i) = queue.dequeue()._1
       }
       out += ((testPoint, outSingle))
-    }
-    
+    }   
   return out 
   }
 
   def basicknnQuerySingleTest(train: ListBuffer[Point], test: Point, k: Int):
   (Point, Array[Point]) = {
-    (test,
-      train.map {
-        x => (x, distance(test, x))
-      }.sortBy(_._2).take(k).map(_._1).toArray)
-    }
+    basicknnQuery(train, ListBuffer(test), k).head
+ }
 
   // main zknn query
   def zknnQuery(train: ListBuffer[Point], test: ListBuffer[Point], k: Int):
