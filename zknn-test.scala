@@ -30,17 +30,8 @@ object zknnTest{
     val tf = System.nanoTime()
     println("Elapsed time for zknn =       : " + (tf - t0)/1000000000 + "s")
 
-      //println("nearest neighbor BENCHMARK =  " + zknn.head._2.head)
-
     val t0_brute = System.nanoTime()
-
     val knn = ZknnClass.basicknnQuery(training, testing, 1)
-    //testing.map { v => (v,
-    //  training.map {
-    //    x => (x, distance(v, x))
-    //  }.sortBy(_._2).take(1).map(_._1).toArray)
-    //}
-      
     val tf_brute = System.nanoTime()
     println("Elapsed time for brute force knn =       : " + (tf_brute - t0_brute)/1000000000 + "s")
 
@@ -63,7 +54,7 @@ object zknnTest{
     //val knn = ZknnClass.zknnQuery(train, test, 1)
     //println("nearest neighbor =  " + knn.head._2.head)
 
-    val numPoints = 32000
+    val numPoints = 64000
      benchmark_zknn(numPoints)
 
   }

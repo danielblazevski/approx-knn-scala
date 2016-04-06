@@ -83,7 +83,7 @@ class zknn(alpha: Int, gamma: Int) {
         }.map {
         shiftTrainPoint =>
           (shiftTrainPoint._1, zValue(shiftTrainPoint._2))
-        }.sortBy(x => x._2)
+        }.sortBy(x => x._2).toArray // array for O(1) access
       }
 
     for (v <- test) {
@@ -93,8 +93,6 @@ class zknn(alpha: Int, gamma: Int) {
   
         // get 2*gamma points about query point q, gamma points above and below based on z value
         // if there aren't gamma points above, still grab 2*gamma points
-
-        // future:  just do a binary search to find the index where z_test lies and find gamma nearby points
         if (zQueryShifted < zTrainSetShiftedSortedFull(i).head._2){
             candidatePointsFromZvalue ++= zTrainSetShiftedSortedFull(i).slice(0,2*gamma).map(x => x._1)
           } else if (zQueryShifted > zTrainSetShiftedSortedFull(i)(zTrainSetShiftedSortedFull(i).length - 1)._2 ){
@@ -108,33 +106,14 @@ class zknn(alpha: Int, gamma: Int) {
         val negLen = index
 
         if (posLen >= gamma && negLen >= gamma) {
-          candidatePointsFromZvalue ++=  zTrainSetShiftedSortedFull(i).slice(i - gamma,i + gamma).map(x => x._1)
+          candidatePointsFromZvalue ++=  zTrainSetShiftedSortedFull(i).slice(i - gamma,i + gamma).map(x => x._1).toList
         } else if (posLen < gamma && posLen + negLen >= 2*gamma) {
-          candidatePointsFromZvalue ++= zTrainSetShiftedSortedFull(i).slice(i - 2*gamma - posLen, i + posLen).map(x => x._1)
+          candidatePointsFromZvalue ++= zTrainSetShiftedSortedFull(i).slice(i - 2*gamma - posLen, i + posLen).map(x => x._1)toList
         } else if (negLen < gamma && posLen + negLen >= 2*gamma) {
-          candidatePointsFromZvalue ++= zTrainSetShiftedSortedFull(i).slice(i - negLen,i + 2*gamma - negLen).map(x => x._1)
+          candidatePointsFromZvalue ++= zTrainSetShiftedSortedFull(i).slice(i - negLen,i + 2*gamma - negLen).map(x => x._1).toList
         } else {
           throw new IllegalArgumentException(s" Error: gamma is too large!")
-        }
-/*  
-        val posFilter = zTrainSetShiftedSortedFull(i).filter(x => x._2 - zQueryShifted >= 0).map(x => x._1)
-        val negFilter = zTrainSetShiftedSortedFull(i).filter(x => x._2 - zQueryShifted < 0).map(x => x._1)
-  
-
-        val posLen = posFilter.length
-        val negLen = negFilter.length
-
-        if (posLen >= gamma && negLen >= gamma) {
-          candidatePointsFromZvalue ++=  posFilter.take(gamma) ++ negFilter.take(gamma)
-        } else if (posLen < gamma && posLen + negLen >= 2*gamma) {
-          candidatePointsFromZvalue ++= posFilter.take(posLen) ++ negFilter.take(2*gamma - posLen)
-        } else if (negLen < gamma && posLen + negLen >= 2*gamma) {
-          candidatePointsFromZvalue ++= negFilter.take(negLen) ++ posFilter.take(2*gamma - negLen)
-        } else {
-          throw new IllegalArgumentException(s" Error: gamma is too large!")
-        }
-        */
-  
+        }  
       }
     }
       res += basicknnQuerySingleTest(candidatePointsFromZvalue, v, k)
@@ -142,11 +121,11 @@ class zknn(alpha: Int, gamma: Int) {
      res
   }
 
-  def getIndexSortedList (list: ListBuffer[(Point, Int)], P: (Point, Int)): Int = {
+  def getIndexSortedList (list: Array[(Point, Int)], P: (Point, Int)): Int = {
     getIndexHelper(list, P, 0, list.length-1)
   }
 
-  def getIndexHelper (list: ListBuffer[(Point, Int)], P: ((Point, Int)), low: Int, high: Int): Int = {
+  def getIndexHelper (list: Array[(Point, Int)], P: ((Point, Int)), low: Int, high: Int): Int = {
     val i = ((high + low)/2).floor.toInt
     if ( P._2 >= list(i)._2 && P._2 <= list(i + 1)._2 ) {
       return i
