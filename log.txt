@@ -1,0 +1,3 @@
+[0m[[0minfo[0m] [0mLoading project definition from /Users/danielblazevski/Dropbox/code/z-knn/project[0m
+[0m[[0minfo[0m] [0mSet current project to z-knn (in build file:/Users/danielblazevski/Dropbox/code/z-knn/)[0m
+[0m[[0minfo[0m] [0mCompiling 1 Scala source to /Users/danielblazevski/Dropbox/code/z-knn/target/scala-2.11/classes...[0m

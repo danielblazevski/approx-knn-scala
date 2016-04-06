@@ -60,10 +60,10 @@ object zknnTest{
     val train = ListBuffer(ListBuffer(1.2, 4.3), ListBuffer(25.0, 3.0), ListBuffer(29.0, 7.5))
     val test = ListBuffer(ListBuffer(0.8, 3.5), ListBuffer(1.6, 0.2))
 
-    val knn = ZknnClass.zknnQuery(train, test, 1)
-    println("nearest neighbor =  " + knn.head._2.head)
+    //val knn = ZknnClass.zknnQuery(train, test, 1)
+    //println("nearest neighbor =  " + knn.head._2.head)
 
-    val numPoints = 16000
+    val numPoints = 32000
      benchmark_zknn(numPoints)
 
   }
