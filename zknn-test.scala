@@ -4,21 +4,15 @@ import zknn.zknn
 
 object zknnTest{
 
-  def distance(a: ArrayBuffer[Double], b: ArrayBuffer[Double]): Double = {
-    math.sqrt(a.zipWithIndex.map { x =>
-      (x._1 - b(x._2)) * (x._1 - b(x._2))
-    }.sum)
-  }
-
   def benchmark_zknn(numPoints: Int){
     /// generate random set of points in [1,2]^6
     // to-do allow for negative entries, even when shifted in zknn query
     val r = scala.util.Random
 
-    val training = ArrayBuffer.fill(numPoints)(ArrayBuffer(r.nextDouble + 1.0, r.nextDouble + 1.0,
+    val training = ArrayBuffer.fill(numPoints)(Array(r.nextDouble + 1.0, r.nextDouble + 1.0,
       r.nextDouble + 1.0,r.nextDouble + 1.0,r.nextDouble + 1.0))
 
-    val testing = ArrayBuffer.fill(numPoints)(ArrayBuffer(r.nextDouble + 1.0, r.nextDouble + 1.0,
+    val testing = ArrayBuffer.fill(numPoints)(Array(r.nextDouble + 1.0, r.nextDouble + 1.0,
       r.nextDouble + 1.0,r.nextDouble + 1.0,r.nextDouble + 1.0))
       
     val alpha = 2
@@ -44,12 +38,12 @@ object zknnTest{
 
     val ZknnClass = new zknn(alpha, gamma)
 
-    val lb = ArrayBuffer(2.0, 6.0)
+    val lb = Array(2.0, 6.0)
     val Zval = ZknnClass.zValue(lb)
     println("zVal =  " + Zval)
 
-    val train = ArrayBuffer(ArrayBuffer(1.2, 4.3), ArrayBuffer(25.0, 3.0), ArrayBuffer(29.0, 7.5))
-    val test = ArrayBuffer(ArrayBuffer(0.8, 3.5), ArrayBuffer(1.6, 0.2))
+    val train = ArrayBuffer(Array(1.2, 4.3), Array(25.0, 3.0), Array(29.0, 7.5))
+    val test = ArrayBuffer(Array(0.8, 3.5), Array(1.6, 0.2))
 
     //val knn = ZknnClass.zknnQuery(train, test, 1)
     //println("nearest neighbor =  " + knn.head._2.head)

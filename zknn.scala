@@ -10,9 +10,9 @@ class zknn(alpha: Int, gamma: Int) {
 
   val r = scala.util.Random
 
-  type Point = ArrayBuffer[Double]
+  type Point = Array[Double]
 
-  def interleave(in: ArrayBuffer[String]): String = {
+  def interleave(in: Array[String]): String = {
     // get max length
     val maxLen = in.map(str => str.length).max
     val L = in.length
