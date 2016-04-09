@@ -4,14 +4,15 @@ package zknn
 
 import scala.collection.mutable.ListBuffer
 import scala.collection.mutable.PriorityQueue
+import scala.collection.mutable.ArrayBuffer
 
 class zknn(alpha: Int, gamma: Int) {
 
   val r = scala.util.Random
 
-  type Point = ListBuffer[Double]
+  type Point = ArrayBuffer[Double]
 
-  def interleave(in: ListBuffer[String]): String = {
+  def interleave(in: ArrayBuffer[String]): String = {
     // get max length
     val maxLen = in.map(str => str.length).max
     val L = in.length
@@ -30,7 +31,7 @@ class zknn(alpha: Int, gamma: Int) {
   }
 
   def zValue(in: Point): Int = {
-    Integer.parseInt(interleave(in.map(x => x.toInt.toBinaryString)), 2)
+   Integer.parseInt(interleave(in.map(x => x.toInt.toBinaryString)), 2)
   }
 
   def distance(a: Point, b: Point): Double = {
@@ -39,11 +40,11 @@ class zknn(alpha: Int, gamma: Int) {
     }.sum)
   }
 
-  def basicknnQuery(train: ListBuffer[Point], test: ListBuffer[Point], k: Int):
-  ListBuffer[(Point, Array[Point])] = {
+  def basicknnQuery(train: ArrayBuffer[Point], test: ArrayBuffer[Point], k: Int):
+  ArrayBuffer[(Point, Array[Point])] = {
 
     val queue = new PriorityQueue[ (Point, Double) ]()(Ordering.by(x => x._2))
-    val out = new ListBuffer[ (Point, Array[Point]) ]
+    val out = new ArrayBuffer[ (Point, Array[Point]) ]
 
     for (testPoint <- test) {      
       val outSingle = new Array[Point](k)
@@ -62,19 +63,19 @@ class zknn(alpha: Int, gamma: Int) {
   return out 
   }
 
-  def basicknnQuerySingleTest(train: ListBuffer[Point], test: Point, k: Int):
+  def basicknnQuerySingleTest(train: ArrayBuffer[Point], test: Point, k: Int):
   (Point, Array[Point]) = {
-    basicknnQuery(train, ListBuffer(test), k).head
+    basicknnQuery(train, ArrayBuffer(test), k).head
  }
 
   // main zknn query
-  def zknnQuery(train: ListBuffer[Point], test: ListBuffer[Point], k: Int):
-  ListBuffer[(Point, Array[Point])] = {
+  def zknnQuery(train: ArrayBuffer[Point], test: ArrayBuffer[Point], k: Int):
+  ArrayBuffer[(Point, Array[Point])] = {
 
     // shift points to make sure all entries are positive (what about random shifts?)
-    val rSeq = ListBuffer.fill(alpha)(ListBuffer.fill(train.head.length)(r.nextDouble))
+    val rSeq = ArrayBuffer.fill(alpha)(ArrayBuffer.fill(train.head.length)(r.nextDouble))
 
-    var res = new ListBuffer[(Point, Array[Point])]
+    var res = new ArrayBuffer[(Point, Array[Point])]
 
       val zTrainSetShiftedSortedFull = rSeq.map{ rVec =>
         train.map{trainPoint => (trainPoint,
@@ -87,7 +88,7 @@ class zknn(alpha: Int, gamma: Int) {
       }
 
     for (v <- test) {
-      var candidatePointsFromZvalue = new ListBuffer[Point]
+      var candidatePointsFromZvalue = new ArrayBuffer[Point]
       for (i <- 0 until alpha) {
         val zQueryShifted = zValue(v.zipWithIndex.map { vZip => vZip._1 - rSeq(i)(vZip._2) })
   
@@ -106,11 +107,11 @@ class zknn(alpha: Int, gamma: Int) {
         val negLen = index
 
         if (posLen >= gamma && negLen >= gamma) {
-          candidatePointsFromZvalue ++=  zTrainSetShiftedSortedFull(i).slice(i - gamma,i + gamma).map(x => x._1).toList
+          candidatePointsFromZvalue ++=  zTrainSetShiftedSortedFull(i).slice(i - gamma,i + gamma).map(x => x._1)
         } else if (posLen < gamma && posLen + negLen >= 2*gamma) {
-          candidatePointsFromZvalue ++= zTrainSetShiftedSortedFull(i).slice(i - 2*gamma - posLen, i + posLen).map(x => x._1)toList
+          candidatePointsFromZvalue ++= zTrainSetShiftedSortedFull(i).slice(i - 2*gamma - posLen, i + posLen).map(x => x._1)
         } else if (negLen < gamma && posLen + negLen >= 2*gamma) {
-          candidatePointsFromZvalue ++= zTrainSetShiftedSortedFull(i).slice(i - negLen,i + 2*gamma - negLen).map(x => x._1).toList
+          candidatePointsFromZvalue ++= zTrainSetShiftedSortedFull(i).slice(i - negLen,i + 2*gamma - negLen).map(x => x._1)
         } else {
           throw new IllegalArgumentException(s" Error: gamma is too large!")
         }  
