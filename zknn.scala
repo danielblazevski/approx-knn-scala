@@ -14,6 +14,7 @@ class zknn(alpha: Int, gamma: Int) {
 
   def interleave(in: Array[String]): String = {
     // get max length
+    // need to change to allow to add/reduce bits
     val maxLen = in.map(str => str.length).max
     val L = in.length
     var res = ""
@@ -31,7 +32,6 @@ class zknn(alpha: Int, gamma: Int) {
   }
 
   def zValue(in: Point): Int = {
-   println(Integer.parseInt(interleave(in.map(x => x.toInt.toBinaryString)), 2))
    Integer.parseInt(interleave(in.map(x => x.toInt.toBinaryString)), 2)
   }
 
@@ -75,8 +75,7 @@ class zknn(alpha: Int, gamma: Int) {
   ArrayBuffer[(Point, Array[Point])] = {
 
     val dim = train.head.length
-    val numDigits = 0  //0 // (numBits + 1) should pick how many digits to choose
-    val shiftBy = 1.0
+    val shiftBy = 1.0  
 
     // normalize points so that they lie in [0,1]^N
     // this guarantees that randomly shifted points lie in [0,2]^N
@@ -89,8 +88,6 @@ class zknn(alpha: Int, gamma: Int) {
       i => shiftBy + (train(i) - trainingNormalizationParameter._1(i)) / 
       (trainingNormalizationParameter._2(i) - trainingNormalizationParameter._1(i))) 
     }
-
-    trainingNormalized.foreach(x=>println(x.mkString))
 
     val testingNormalized = test.map { test => tabArr.map(i =>
       shiftBy + (test(i) - testingNormalizationParameter._1(i))/ 
@@ -107,7 +104,6 @@ class zknn(alpha: Int, gamma: Int) {
           trainPointZipped._1 - rVec(trainPointZipped._2)))
         }.map {
         shiftTrainPoint =>
-          //(shiftTrainPoint._1, zValue(shiftTrainPoint._2.map(x => x*Math.pow(10,numDigits)) ))
           (shiftTrainPoint._1, zValue(shiftTrainPoint._2))
         }.sortBy(x => x._2).toArray // array for O(1) access
       }
@@ -115,8 +111,7 @@ class zknn(alpha: Int, gamma: Int) {
     for (v <- testingNormalized) {
       var candidatePointsFromZvalue = new ArrayBuffer[Point]
       for (i <- 0 until alpha) {
-        val zQueryShifted = zValue(v.zipWithIndex.map
-          { vZip => vZip._1 - rSeq(i)(vZip._2) }.map(x=>x*Math.pow(10,numDigits)))
+        val zQueryShifted = zValue(v.zipWithIndex.map{ vZip => vZip._1 - rSeq(i)(vZip._2) })
   
         // get 2*gamma points about query point q, gamma points above and below based on z value
         // if there aren't gamma points above, still grab 2*gamma points
@@ -169,7 +164,6 @@ class zknn(alpha: Int, gamma: Int) {
     val maxVec = MaxArr.map(i => vec.map(x => x(i)).max)
 
     (minVec, maxVec)
-    //maxVec.zipWithIndex.map{x => x._1 - minVec(x._2)}
   }
 
 
