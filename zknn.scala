@@ -31,6 +31,7 @@ class zknn(alpha: Int, gamma: Int) {
   }
 
   def zValue(in: Point): Int = {
+   println(Integer.parseInt(interleave(in.map(x => x.toInt.toBinaryString)), 2))
    Integer.parseInt(interleave(in.map(x => x.toInt.toBinaryString)), 2)
   }
 
@@ -68,29 +69,54 @@ class zknn(alpha: Int, gamma: Int) {
     basicknnQuery(train, ArrayBuffer(test), k).head
  }
 
+
   // main zknn query
   def zknnQuery(train: ArrayBuffer[Point], test: ArrayBuffer[Point], k: Int):
   ArrayBuffer[(Point, Array[Point])] = {
 
-    // shift points to make sure all entries are positive (what about random shifts?)
-    val rSeq = ArrayBuffer.fill(alpha)(ArrayBuffer.fill(train.head.length)(r.nextDouble))
+    val dim = train.head.length
+    val numDigits = 0  //0 // (numBits + 1) should pick how many digits to choose
+    val shiftBy = 1.0
+
+    // normalize points so that they lie in [0,1]^N
+    // this guarantees that randomly shifted points lie in [0,2]^N
+    val trainingNormalizationParameter = getNormalizingParameters(train)
+    
+    val testingNormalizationParameter = getNormalizingParameters(test)
+    val tabArr = Array.tabulate(dim)(x => x)
+
+    val trainingNormalized = train.map { train => tabArr.map( 
+      i => shiftBy + (train(i) - trainingNormalizationParameter._1(i)) / 
+      (trainingNormalizationParameter._2(i) - trainingNormalizationParameter._1(i))) 
+    }
+
+    trainingNormalized.foreach(x=>println(x.mkString))
+
+    val testingNormalized = test.map { test => tabArr.map(i =>
+      shiftBy + (test(i) - testingNormalizationParameter._1(i))/ 
+      (testingNormalizationParameter._2(i) - testingNormalizationParameter._1(i)))
+    }
+
+    val rSeq = ArrayBuffer.fill(alpha)(ArrayBuffer.fill(dim)(r.nextDouble))
 
     var res = new ArrayBuffer[(Point, Array[Point])]
 
       val zTrainSetShiftedSortedFull = rSeq.map{ rVec =>
-        train.map{trainPoint => (trainPoint,
+        trainingNormalized.map{trainPoint => (trainPoint,
         trainPoint.zipWithIndex.map(trainPointZipped =>
           trainPointZipped._1 - rVec(trainPointZipped._2)))
         }.map {
         shiftTrainPoint =>
+          //(shiftTrainPoint._1, zValue(shiftTrainPoint._2.map(x => x*Math.pow(10,numDigits)) ))
           (shiftTrainPoint._1, zValue(shiftTrainPoint._2))
         }.sortBy(x => x._2).toArray // array for O(1) access
       }
 
-    for (v <- test) {
+    for (v <- testingNormalized) {
       var candidatePointsFromZvalue = new ArrayBuffer[Point]
       for (i <- 0 until alpha) {
-        val zQueryShifted = zValue(v.zipWithIndex.map { vZip => vZip._1 - rSeq(i)(vZip._2) })
+        val zQueryShifted = zValue(v.zipWithIndex.map
+          { vZip => vZip._1 - rSeq(i)(vZip._2) }.map(x=>x*Math.pow(10,numDigits)))
   
         // get 2*gamma points about query point q, gamma points above and below based on z value
         // if there aren't gamma points above, still grab 2*gamma points
@@ -119,8 +145,33 @@ class zknn(alpha: Int, gamma: Int) {
     }
       res += basicknnQuerySingleTest(candidatePointsFromZvalue, v, k)
     }
-     res
+      res.map { tuple =>
+      (tabArr.map(i => 
+        tuple._1(i)*(testingNormalizationParameter._2(i) - testingNormalizationParameter._1(i))
+        + testingNormalizationParameter._1(i) - shiftBy),
+        tuple._2.map(neighbor =>
+          tabArr.map(i => 
+        neighbor(i)*(testingNormalizationParameter._2(i) - testingNormalizationParameter._1(i))
+        + testingNormalizationParameter._1(i) -  shiftBy))
+        )
+    }
+
   }
+
+  // get parameters for normalizing data
+  def getNormalizingParameters(vec: ArrayBuffer[Point]):  /// NEED TO FIX THIS
+    (Point, Point) = {
+
+    val MinArr = Array.tabulate(vec.head.size)(x => x)
+    val MaxArr = Array.tabulate(vec.head.size)(x => x)
+
+    val minVec = MinArr.map(i => vec.map(x => x(i)).min)
+    val maxVec = MaxArr.map(i => vec.map(x => x(i)).max)
+
+    (minVec, maxVec)
+    //maxVec.zipWithIndex.map{x => x._1 - minVec(x._2)}
+  }
+
 
   def getIndexSortedList (list: Array[(Point, Int)], P: (Point, Int)): Int = {
     getIndexHelper(list, P, 0, list.length-1)

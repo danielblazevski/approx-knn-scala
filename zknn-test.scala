@@ -5,7 +5,7 @@ import zknn.zknn
 object zknnTest{
 
   def benchmark_zknn(numPoints: Int){
-    /// generate random set of points in [1,2]^6
+    // generate random set of points in [1,2]^6
     // to-do allow for negative entries, even when shifted in zknn query
     val r = scala.util.Random
 
@@ -48,7 +48,7 @@ object zknnTest{
     //val knn = ZknnClass.zknnQuery(train, test, 1)
     //println("nearest neighbor =  " + knn.head._2.head)
 
-    val numPoints = 64000
+    val numPoints = 5000
      benchmark_zknn(numPoints)
 
   }
