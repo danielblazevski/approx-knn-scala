@@ -1,6 +1,8 @@
 import scala.collection.mutable.ArrayBuffer
 
-import zknn.zknn
+import approxknn.approxKNN
+import approxknn.zKNN
+
 
 object zknnTest{
 
@@ -19,13 +21,13 @@ object zknnTest{
     val gamma = 5
 
     val t0 = System.nanoTime()
-    val ZknnClass = new zknn(alpha, gamma)
-    val zknn = ZknnClass.zknnQuery(training, testing, 1)
+    val knnClass = new approxKNN()
+    val zknn = knnClass.approxKNN(training, testing, 1)
     val tf = System.nanoTime()
     println("Elapsed time for zknn =       : " + (tf - t0)/1000000000 + "s")
 
     val t0_brute = System.nanoTime()
-    val knn = ZknnClass.basicknnQuery(training, testing, 1)
+    val knn = knnClass.basicknnQuery(training, testing, 1)
     val tf_brute = System.nanoTime()
     println("Elapsed time for brute force knn =       : " + (tf_brute - t0_brute)/1000000000 + "s")
 
@@ -36,7 +38,7 @@ object zknnTest{
     val alpha = 1
     val gamma = 1
 
-    val ZknnClass = new zknn(alpha, gamma)
+    val ZknnClass = new zKNN(alpha, gamma)
 
     val lb = Array(2.0, 6.0)
     val Zval = ZknnClass.zValue(lb)
