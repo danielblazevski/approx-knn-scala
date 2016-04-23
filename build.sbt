@@ -1,4 +1,4 @@
-name := "z-knn"
+name := "approx-knn"
 
 version := "1.0"
 
