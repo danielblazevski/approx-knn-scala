@@ -26,8 +26,8 @@ class approxKNN() {
       ZknnClass.zknnQuery(train, test, k)
     } else {
       // do LSH method, below is a place-holder for now
-      val ZknnClass = new zKNN(alpha, gamma)
-      ZknnClass.zknnQuery(train, test, k)
+      val lshKnnClass = new lshKNN(alpha)
+      lshKnnClass.lshknnQuery(train, test, k)
     }
 
   }
