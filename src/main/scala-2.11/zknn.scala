@@ -8,7 +8,6 @@ class zKNN(alpha: Int, gamma: Int) extends approxKNN() {
 
   def interleave(in: Array[String]): String = {
     // get max length
-    // need to change to allow to add/reduce bits
     val maxLen = in.map(str => str.length).max
     val L = in.length
     var res = ""

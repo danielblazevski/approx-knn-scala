@@ -50,7 +50,7 @@ object zknnTest{
     //val knn = ZknnClass.zknnQuery(train, test, 1)
     //println("nearest neighbor =  " + knn.head._2.head)
 
-    val numPoints = 5000
+    val numPoints = 50000
      benchmark_zknn(numPoints)
 
   }
