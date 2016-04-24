@@ -29,10 +29,9 @@ class approxKNN() {
       val lshKnnClass = new lshKNN(alpha)
       lshKnnClass.lshknnQuery(train, test, k)
     }
-
   }
-  /// a bunch of methods, will likely be ovelap for both z-value and LSH methods
-  
+
+  // method for brute-force knn using a priority queue  
   def distance(a: Point, b: Point): Double = {
     math.sqrt(a.zipWithIndex.map { x =>
       (x._1 - b(x._2)) * (x._1 - b(x._2))
@@ -48,7 +47,6 @@ class approxKNN() {
     for (testPoint <- test) {      
       val outSingle = new Array[Point](k)
       for (trainPoint <- train) {
-        // (training vector, input vector, input key, distance)
         queue.enqueue((trainPoint, distance(testPoint, trainPoint)))
         if (queue.size > k) {
           queue.dequeue()
@@ -66,6 +64,5 @@ class approxKNN() {
   (Point, Array[Point]) = {
     basicknnQuery(train, ArrayBuffer(test), k).head
  }
-
 
 }

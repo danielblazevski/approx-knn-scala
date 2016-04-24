@@ -71,7 +71,7 @@ class zKNN(alpha: Int, gamma: Int) extends approxKNN() {
     }
       res += basicknnQuerySingleTest(candidatePoints, v, k)
     }
-      
+      // denormalize result (Point, Array[Point])
       res.map { tuple => (denormalizePoint(tuple._1, testMinMax._1, testMinMax._2),
         denormalizePoints(tuple._2, trainMinMax._1, trainMinMax._2))
       }
