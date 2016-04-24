@@ -1,16 +1,10 @@
-// z-knn
+// z-value based approximate k-nearest neighbors algorithm
 
-package zknn
+package approxknn
 
-import scala.collection.mutable.ListBuffer
-import scala.collection.mutable.PriorityQueue
 import scala.collection.mutable.ArrayBuffer
 
-class zknn(alpha: Int, gamma: Int) {
-
-  val r = scala.util.Random
-
-  type Point = Array[Double]
+class zKNN(alpha: Int, gamma: Int) extends approxKNN() {
 
   def interleave(in: Array[String]): String = {
     // get max length
@@ -31,71 +25,25 @@ class zknn(alpha: Int, gamma: Int) {
   }
 
   def zValue(in: Point): Int = {
-   println(Integer.parseInt(interleave(in.map(x => x.toInt.toBinaryString)), 2))
    Integer.parseInt(interleave(in.map(x => x.toInt.toBinaryString)), 2)
   }
-
-  def distance(a: Point, b: Point): Double = {
-    math.sqrt(a.zipWithIndex.map { x =>
-      (x._1 - b(x._2)) * (x._1 - b(x._2))
-    }.sum)
-  }
-
-  def basicknnQuery(train: ArrayBuffer[Point], test: ArrayBuffer[Point], k: Int):
-  ArrayBuffer[(Point, Array[Point])] = {
-
-    val queue = new PriorityQueue[ (Point, Double) ]()(Ordering.by(x => x._2))
-    val out = new ArrayBuffer[ (Point, Array[Point]) ]
-
-    for (testPoint <- test) {      
-      val outSingle = new Array[Point](k)
-      for (trainPoint <- train) {
-        // (training vector, input vector, input key, distance)
-        queue.enqueue((trainPoint, distance(testPoint, trainPoint)))
-        if (queue.size > k) {
-          queue.dequeue()
-        }
-      }
-      for (i <- 0 until k) {
-        outSingle(i) = queue.dequeue()._1
-      }
-      out += ((testPoint, outSingle))
-    }   
-  return out 
-  }
-
-  def basicknnQuerySingleTest(train: ArrayBuffer[Point], test: Point, k: Int):
-  (Point, Array[Point]) = {
-    basicknnQuery(train, ArrayBuffer(test), k).head
- }
-
 
   // main zknn query
   def zknnQuery(train: ArrayBuffer[Point], test: ArrayBuffer[Point], k: Int):
   ArrayBuffer[(Point, Array[Point])] = {
 
     val dim = train.head.length
-    val numDigits = 0  //0 // (numBits + 1) should pick how many digits to choose
-    val shiftBy = 1.0
+    val tabArr = Array.tabulate(dim)(x => x)
+
+    val bitMult = (30/dim).floor.toInt - 1
 
     // normalize points so that they lie in [0,1]^N
     // this guarantees that randomly shifted points lie in [0,2]^N
-    val trainingNormalizationParameter = getNormalizingParameters(train)
+    val trainMinMax = getNormalizingParameters(train)
+    val testMinMax = getNormalizingParameters(test)
     
-    val testingNormalizationParameter = getNormalizingParameters(test)
-    val tabArr = Array.tabulate(dim)(x => x)
-
-    val trainingNormalized = train.map { train => tabArr.map( 
-      i => shiftBy + (train(i) - trainingNormalizationParameter._1(i)) / 
-      (trainingNormalizationParameter._2(i) - trainingNormalizationParameter._1(i))) 
-    }
-
-    trainingNormalized.foreach(x=>println(x.mkString))
-
-    val testingNormalized = test.map { test => tabArr.map(i =>
-      shiftBy + (test(i) - testingNormalizationParameter._1(i))/ 
-      (testingNormalizationParameter._2(i) - testingNormalizationParameter._1(i)))
-    }
+    val trainingNormalized = normalizePoints(train, trainMinMax._1, trainMinMax._2)
+    val testingNormalized = normalizePoints(test, testMinMax._1, testMinMax._2)
 
     val rSeq = ArrayBuffer.fill(alpha)(ArrayBuffer.fill(dim)(r.nextDouble))
 
@@ -104,19 +52,18 @@ class zknn(alpha: Int, gamma: Int) {
       val zTrainSetShiftedSortedFull = rSeq.map{ rVec =>
         trainingNormalized.map{trainPoint => (trainPoint,
         trainPoint.zipWithIndex.map(trainPointZipped =>
-          trainPointZipped._1 - rVec(trainPointZipped._2)))
+          trainPointZipped._1 + rVec(trainPointZipped._2)))
         }.map {
         shiftTrainPoint =>
-          //(shiftTrainPoint._1, zValue(shiftTrainPoint._2.map(x => x*Math.pow(10,numDigits)) ))
-          (shiftTrainPoint._1, zValue(shiftTrainPoint._2))
+          (shiftTrainPoint._1, zValue(shiftTrainPoint._2.map(x=>Math.pow(2,bitMult))))
         }.sortBy(x => x._2).toArray // array for O(1) access
       }
 
     for (v <- testingNormalized) {
       var candidatePointsFromZvalue = new ArrayBuffer[Point]
       for (i <- 0 until alpha) {
-        val zQueryShifted = zValue(v.zipWithIndex.map
-          { vZip => vZip._1 - rSeq(i)(vZip._2) }.map(x=>x*Math.pow(10,numDigits)))
+        val zQueryShifted = zValue(v.zipWithIndex.map{ vZip => vZip._1 + rSeq(i)(vZip._2) }
+          .map(x=>Math.pow(2,bitMult)))
   
         // get 2*gamma points about query point q, gamma points above and below based on z value
         // if there aren't gamma points above, still grab 2*gamma points
@@ -145,17 +92,10 @@ class zknn(alpha: Int, gamma: Int) {
     }
       res += basicknnQuerySingleTest(candidatePointsFromZvalue, v, k)
     }
-      res.map { tuple =>
-      (tabArr.map(i => 
-        tuple._1(i)*(testingNormalizationParameter._2(i) - testingNormalizationParameter._1(i))
-        + testingNormalizationParameter._1(i) - shiftBy),
-        tuple._2.map(neighbor =>
-          tabArr.map(i => 
-        neighbor(i)*(testingNormalizationParameter._2(i) - testingNormalizationParameter._1(i))
-        + testingNormalizationParameter._1(i) -  shiftBy))
-        )
-    }
-
+      
+      res.map { tuple => (denormalizePoint(tuple._1, testMinMax._1, testMinMax._2),
+        denormalizePoints(tuple._2, trainMinMax._1, trainMinMax._2))
+      }
   }
 
   // get parameters for normalizing data
@@ -169,9 +109,40 @@ class zknn(alpha: Int, gamma: Int) {
     val maxVec = MaxArr.map(i => vec.map(x => x(i)).max)
 
     (minVec, maxVec)
-    //maxVec.zipWithIndex.map{x => x._1 - minVec(x._2)}
   }
 
+  // normalize data to unit cube
+  def normalizePoints(arr: ArrayBuffer[Point], minArr: Array[Double], maxArr: Array[Double]):
+    ArrayBuffer[Point] = {
+    val dim = arr.head.length
+
+    val tabArr = Array.tabulate(dim)(x => x)
+    arr.map { x => tabArr.map( 
+      i => (x(i) - minArr(i)) / (maxArr(i) - minArr(i))) 
+    }
+  }
+
+  // denormalize data from unit cube
+  def denormalizePoints(arr: Array[Point], minArr: Array[Double], maxArr: Array[Double]):
+    Array[Point] = {
+    val dim = arr.head.length
+
+    val tabArr = Array.tabulate(dim)(x => x)
+    arr.map { x => tabArr.map( 
+      i => x(i)*((maxArr(i) - minArr(i))) + minArr(i))  
+    }
+  }
+
+  // denormalize data from unit cube
+  def denormalizePoint(p: Point, minArr: Array[Double], maxArr: Array[Double]):
+    Point = {
+    val dim = p.length
+
+    val tabArr = Array.tabulate(dim)(x => x)
+    tabArr.map( 
+      i => p(i)*((maxArr(i) - minArr(i))) + minArr(i))  
+    
+  }
 
   def getIndexSortedList (list: Array[(Point, Int)], P: (Point, Int)): Int = {
     getIndexHelper(list, P, 0, list.length-1)
@@ -187,4 +158,5 @@ class zknn(alpha: Int, gamma: Int) {
       getIndexHelper(list, P, i, high)
     }
   }
+
 }

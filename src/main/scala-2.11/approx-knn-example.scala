@@ -1,10 +1,12 @@
 import scala.collection.mutable.ArrayBuffer
 
-import zknn.zknn
+import approxknn.approxKNN
+import approxknn.zKNN
+import approxknn.lshKNN
 
 object zknnTest{
 
-  def benchmark_zknn(numPoints: Int){
+  def benchmark_knn(numPoints: Int){
     // generate random set of points in [1,2]^6
     // to-do allow for negative entries, even when shifted in zknn query
     val r = scala.util.Random
@@ -19,13 +21,20 @@ object zknnTest{
     val gamma = 5
 
     val t0 = System.nanoTime()
-    val ZknnClass = new zknn(alpha, gamma)
-    val zknn = ZknnClass.zknnQuery(training, testing, 1)
+    val knnClass = new approxKNN()
+    val zknn = knnClass.approxKNN(training, testing, 1)
     val tf = System.nanoTime()
     println("Elapsed time for zknn =       : " + (tf - t0)/1000000000 + "s")
 
+    val t0_lsh = System.nanoTime()
+    val lshKnnClass = new lshKNN(2)
+    val lshknn = lshKnnClass.lshknnQuery(training, testing, 1)
+    val tf_lsh = System.nanoTime()
+    println("Elapsed time for lsh-knn =       : " + (tf_lsh - t0_lsh)/1000000000 + "s")
+
+
     val t0_brute = System.nanoTime()
-    val knn = ZknnClass.basicknnQuery(training, testing, 1)
+    val knn = knnClass.basicknnQuery(training, testing, 1)
     val tf_brute = System.nanoTime()
     println("Elapsed time for brute force knn =       : " + (tf_brute - t0_brute)/1000000000 + "s")
 
@@ -36,7 +45,7 @@ object zknnTest{
     val alpha = 1
     val gamma = 1
 
-    val ZknnClass = new zknn(alpha, gamma)
+    val ZknnClass = new zKNN(alpha, gamma)
 
     val lb = Array(2.0, 6.0)
     val Zval = ZknnClass.zValue(lb)
@@ -49,7 +58,7 @@ object zknnTest{
     //println("nearest neighbor =  " + knn.head._2.head)
 
     val numPoints = 5000
-     benchmark_zknn(numPoints)
+     benchmark_knn(numPoints)
 
   }
 }
