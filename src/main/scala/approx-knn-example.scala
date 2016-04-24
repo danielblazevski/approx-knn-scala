@@ -32,7 +32,6 @@ object zknnTest{
     val tf_lsh = System.nanoTime()
     println("Elapsed time for lsh-knn =       : " + (tf_lsh - t0_lsh)/1000000000 + "s")
 
-
     val t0_brute = System.nanoTime()
     val knn = knnClass.basicknnQuery(training, testing, 1)
     val tf_brute = System.nanoTime()
