@@ -26,6 +26,7 @@ class zKNN(alpha: Int, gamma: Int) extends approxKNN() {
   }
 
   def zValue(in: Point): Int = {
+   //println((0,Integer.parseInt(interleave(in.map(x => ((Math.pow(2,5)*x).toInt).toBinaryString)), 2)))   
    Integer.parseInt(interleave(in.map(x => x.toInt.toBinaryString)), 2)
   }
 
@@ -34,8 +35,9 @@ class zKNN(alpha: Int, gamma: Int) extends approxKNN() {
   ArrayBuffer[(Point, Array[Point])] = {
 
     val dim = train.head.length
-    val shiftBy = 1.0  
     val tabArr = Array.tabulate(dim)(x => x)
+
+    val bitMult = (30/dim).floor.toInt
 
     // normalize points so that they lie in [0,1]^N
     // this guarantees that randomly shifted points lie in [0,2]^N
@@ -43,7 +45,7 @@ class zKNN(alpha: Int, gamma: Int) extends approxKNN() {
     val testMinMax = getNormalizingParameters(test)
     
     val trainingNormalized = normalizePoints(train, trainMinMax._1, trainMinMax._2)
-    val testingNormalized = normalizePoints(train, testMinMax._1, testMinMax._2)
+    val testingNormalized = normalizePoints(test, testMinMax._1, testMinMax._2)
 
     val rSeq = ArrayBuffer.fill(alpha)(ArrayBuffer.fill(dim)(r.nextDouble))
 
@@ -52,7 +54,7 @@ class zKNN(alpha: Int, gamma: Int) extends approxKNN() {
       val zTrainSetShiftedSortedFull = rSeq.map{ rVec =>
         trainingNormalized.map{trainPoint => (trainPoint,
         trainPoint.zipWithIndex.map(trainPointZipped =>
-          trainPointZipped._1 - rVec(trainPointZipped._2)))
+          trainPointZipped._1 + rVec(trainPointZipped._2)))
         }.map {
         shiftTrainPoint =>
           (shiftTrainPoint._1, zValue(shiftTrainPoint._2))
@@ -62,7 +64,7 @@ class zKNN(alpha: Int, gamma: Int) extends approxKNN() {
     for (v <- testingNormalized) {
       var candidatePointsFromZvalue = new ArrayBuffer[Point]
       for (i <- 0 until alpha) {
-        val zQueryShifted = zValue(v.zipWithIndex.map{ vZip => vZip._1 - rSeq(i)(vZip._2) })
+        val zQueryShifted = zValue(v.zipWithIndex.map{ vZip => vZip._1 + rSeq(i)(vZip._2) })
   
         // get 2*gamma points about query point q, gamma points above and below based on z value
         // if there aren't gamma points above, still grab 2*gamma points

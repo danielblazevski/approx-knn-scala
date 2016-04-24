@@ -20,7 +20,8 @@ class approxKNN() {
 
   def approxKNN(train: ArrayBuffer[Point], test: ArrayBuffer[Point], k: Int):
   ArrayBuffer[(Point, Array[Point])] = {
-    if ( train.head.length < 30) {
+  val dim = train.head.length
+    if ( dim < 30) {
       val ZknnClass = new zKNN(alpha, gamma)
       ZknnClass.zknnQuery(train, test, k)
     } else {
