@@ -35,7 +35,8 @@ class lshKNN(alpha: Int) extends zKNN(alpha, gamma = 5) {
 	}
 
     for (v <- test) {
-      var candidatePoints = new ArrayBuffer[Point]
+       var candidatePoints: scala.collection.mutable.Set[Point] =
+        scala.collection.mutable.Set()       
        val hashesV = lshHash(v, rSeq, b, W)
        var numCol = 0
        val loop = new Breaks;

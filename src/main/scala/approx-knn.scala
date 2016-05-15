@@ -38,6 +38,29 @@ class approxKNN() {
     }.sum)
   }
 
+  def basicknnQuery(train: scala.collection.mutable.Set[Point], test: ArrayBuffer[Point], k: Int):
+  ArrayBuffer[(Point, Array[Point])] = {
+
+    val queue = new PriorityQueue[ (Point, Double) ]()(Ordering.by(x => x._2))
+    val out = new ArrayBuffer[ (Point, Array[Point]) ]
+
+    for (testPoint <- test) {      
+      val outSingle = new Array[Point](k)
+      for (trainPoint <- train) {
+        queue.enqueue((trainPoint, distance(testPoint, trainPoint)))
+        if (queue.size > k) {
+          queue.dequeue()
+        }
+      }
+      for (i <- 0 until k) {
+        outSingle(i) = queue.dequeue()._1
+      }
+      out += ((testPoint, outSingle))
+    }   
+  return out 
+  }
+
+  // prob don't need to overload
   def basicknnQuery(train: ArrayBuffer[Point], test: ArrayBuffer[Point], k: Int):
   ArrayBuffer[(Point, Array[Point])] = {
 
@@ -60,7 +83,8 @@ class approxKNN() {
   return out 
   }
 
-  def basicknnQuerySingleTest(train: ArrayBuffer[Point], test: Point, k: Int):
+
+  def basicknnQuerySingleTest(train: scala.collection.mutable.Set[Point], test: Point, k: Int):
   (Point, Array[Point]) = {
     basicknnQuery(train, ArrayBuffer(test), k).head
  }

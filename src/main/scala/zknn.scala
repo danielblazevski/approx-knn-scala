@@ -14,14 +14,13 @@ class zKNN(alpha: Int, gamma: Int) extends approxKNN() {
     val tabArr = Array.tabulate(dim)(x => x)
 
     val bitMult = (30/dim).floor.toInt - 1
-
+    println(bitMult)
     // normalize points so that they lie in [0,1]^N
     // this guarantees that randomly shifted points lie in [0,2]^N
-    val trainMinMax = getNormalizingParameters(train)
-    val testMinMax = getNormalizingParameters(test)
-    
-    val trainingNormalized = normalizePoints(train, trainMinMax._1, trainMinMax._2)
-    val testingNormalized = normalizePoints(test, testMinMax._1, testMinMax._2)
+    val testTrainMinMax = getNormalizingParameters(train.union(test))
+
+    val trainingNormalized = normalizePoints(train, testTrainMinMax._1, testTrainMinMax._2)
+    val testingNormalized = normalizePoints(test, testTrainMinMax._1, testTrainMinMax._2)
 
     val rSeq = ArrayBuffer.fill(alpha)(ArrayBuffer.fill(dim)(r.nextDouble))
 
@@ -32,18 +31,19 @@ class zKNN(alpha: Int, gamma: Int) extends approxKNN() {
         P.zipWithIndex.map(trainZip =>
           trainZip._1 + rVec(trainZip._2)))
         }.map { shifted =>
-          (shifted._1, zValue(shifted._2.map(x=>Math.pow(2,bitMult))))
+          (shifted._1, zValue(shifted._2.map(x=>Math.pow(2,bitMult)*x)))
         }.sortBy(x => x._2).toArray // array for O(1) access
       }
 
     var res = new ArrayBuffer[(Point, Array[Point])]
 
     for (v <- testingNormalized) {
-      var candidatePoints = new ArrayBuffer[Point]
+      var candidatePoints: scala.collection.mutable.Set[Point] =
+        scala.collection.mutable.Set()
       for (i <- 0 until alpha) {
         val zQueryShifted = zValue(v.zipWithIndex.map{ vZip => vZip._1 + rSeq(i)(vZip._2) }
-          .map(x=>Math.pow(2,bitMult)))
-  
+          .map(x=>Math.pow(2,bitMult)*x)) 
+
         // get 2*gamma points about query point q, gamma points above and below based on z value
         // if there aren't gamma points above, still grab 2*gamma points
         if (zQueryShifted < zTrainShiftedSorted(i).head._2){
@@ -59,11 +59,11 @@ class zKNN(alpha: Int, gamma: Int) extends approxKNN() {
         val negLen = index
 
         if (posLen >= gamma && negLen >= gamma) {
-          candidatePoints ++=  zTrainShiftedSorted(i).slice(i - gamma,i + gamma).map(x => x._1)
+          candidatePoints ++=  zTrainShiftedSorted(i).slice(index - gamma,index + gamma).map(x => x._1)
         } else if (posLen < gamma && posLen + negLen >= 2*gamma) {
-          candidatePoints ++= zTrainShiftedSorted(i).slice(i - 2*gamma - posLen, i + posLen).map(x => x._1)
+          candidatePoints ++= zTrainShiftedSorted(i).slice(index - 2*gamma - posLen, index + posLen).map(x => x._1)
         } else if (negLen < gamma && posLen + negLen >= 2*gamma) {
-          candidatePoints ++= zTrainShiftedSorted(i).slice(i - negLen,i + 2*gamma - negLen).map(x => x._1)
+          candidatePoints ++= zTrainShiftedSorted(i).slice(index - negLen,index + 2*gamma - negLen).map(x => x._1)
         } else {
           throw new IllegalArgumentException(s" Error: gamma is too large!")
         }  
@@ -72,8 +72,8 @@ class zKNN(alpha: Int, gamma: Int) extends approxKNN() {
       res += basicknnQuerySingleTest(candidatePoints, v, k)
     }
       // denormalize result (Point, Array[Point])
-      res.map { tuple => (denormalizePoint(tuple._1, testMinMax._1, testMinMax._2),
-        denormalizePoints(tuple._2, trainMinMax._1, trainMinMax._2))
+      res.map { tuple => (denormalizePoint(tuple._1, testTrainMinMax._1, testTrainMinMax._2),
+        denormalizePoints(tuple._2, testTrainMinMax._1, testTrainMinMax._2))
       }
   }
 
